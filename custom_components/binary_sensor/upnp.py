@@ -113,8 +113,8 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             name = device_list[uuid].name
             _LOGGER.debug("Got update for %s: %s", name, new_state)
             await device_list[uuid].async_update_ha_state()
-        else:
-            _LOGGER.error("Got a change callback for non-existing uuid: %s" % uuid)
+        # else:
+        #    _LOGGER.debug("Got a change callback for non-tracked uuid: %s" % uuid)
 
 
     # Initialize all tracked devices to be off.
