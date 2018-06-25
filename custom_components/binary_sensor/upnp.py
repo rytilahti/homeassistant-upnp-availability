@@ -54,16 +54,18 @@ class SSDPDiscovery(asyncio.Protocol):
         payload = defaultdict(lambda:"empty")
         for idx, line in enumerate(data.rstrip('\r\n').split('\r\n')):
             if idx == 0:
-                cmd, _, _ = line.split(" ")
+                # _LOGGER.debug("addr: %s, line: %s", addr, line)
+                cmd, *rest = line.split(" ")
                 if cmd != "NOTIFY":
-                    # print("got non-notify: %s" % data)
+                    # _LOGGER.info("got non-notify: %s" % data)
                     return  # break on non-notifys
                 continue
             name, content = line.split(':', maxsplit=1)
             content = content.strip()
             payload[name] = content
 
-        # _LOGGER.debug("Got a notify: %s", pf(payload))
+        _LOGGER.debug("Got a notify: %s", pf(payload))
+
         if payload["NTS"] == SSDPDiscovery.SSDP_HELLO:
             _LOGGER.debug("Got alive from (%s) %s!" % (host, payload["USN"]))
             for cb in self._callbacks:
