@@ -1,0 +1,13 @@
+{
+  "domain": "upnp_availability",
+  "name": "UPnP Availability Sensor",
+  "config_flow": true,
+  "documentation": "",
+  "requirements": [],
+  "ssdp": {},
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@rytilahti"
+  ]
+}
