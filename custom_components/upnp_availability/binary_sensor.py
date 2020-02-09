@@ -89,12 +89,10 @@ class UPNPBinarySensor(BinarySensorDevice):
     def device_info(self):
         """Device information."""
         return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name,
-            'manufacturer': self.dev.info["manufacturer"],
-            'model': f"{self.dev.info['model_name']} - {self.dev.info['model_description']}",
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": self.dev.info["manufacturer"],
+            "model": f"{self.dev.info['model_name']} - {self.dev.info['model_description']}",
         }
 
     @property

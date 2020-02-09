@@ -8,11 +8,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def _async_has_devices(hass) -> bool:
     """There are always devices to be discovered."""
     return True
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, "UPnP Availability", _async_has_devices, config_entries.CONN_CLASS_LOCAL_PUSH
+    DOMAIN,
+    "UPnP Availability",
+    _async_has_devices,
+    config_entries.CONN_CLASS_LOCAL_PUSH,
 )
