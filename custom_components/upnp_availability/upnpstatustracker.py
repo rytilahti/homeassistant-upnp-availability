@@ -306,7 +306,7 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logging.getLogger("async_upnp_client").setLevel(level=logging.INFO)
     logging.getLogger("async_upnp_client.traffic").setLevel(level=logging.INFO)
     main()

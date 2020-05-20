@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_tracker)
 
 
-class UPNPBinarySensor(BinarySensorDevice):
+class UPNPBinarySensor(BinarySensorEntity):
     """A Class for an UPNP availability sensor."""
 
     def __init__(self, dev):
