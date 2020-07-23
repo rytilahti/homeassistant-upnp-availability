@@ -8,7 +8,7 @@ from typing import Optional
 from collections import defaultdict
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .upnpstatustracker import UPnPStatusTracker, Device
 from .const import DOMAIN
@@ -48,11 +48,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await tracker.find_devices()
     await tracker.listen()
 
-    def stop_tracker(event):
+    async def stop_tracker(event):
         """Stop the tracker on shutdown."""
         _LOGGER.debug("Stopping upnp_availability")
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(upnp_data["tracker"].stop())
+        await upnp_data["tracker"].stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_tracker)
 
