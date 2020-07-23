@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 import attr
 
-from async_upnp_client import UpnpFactory
+from async_upnp_client import UpnpFactory, UpnpError
 from async_upnp_client.advertisement import UpnpAdvertisementListener
 from async_upnp_client.aiohttp import AiohttpRequester
 from async_upnp_client.search import async_search
@@ -113,25 +113,21 @@ class Device:
         requester = AiohttpRequester()
         factory = UpnpFactory(requester)
 
-        try:
-            device = await factory.async_create_device(self.url)
-            self.name = device.name
-            # FIXME this depends currently on async_upnp_client internals..
-            infodict = device._device_info._asdict()
-            _LOGGER.debug("Got device info: %s from url %s", infodict, self.url)
+        device = await factory.async_create_device(self.url)
+        self.name = device.name
+        # FIXME this depends currently on async_upnp_client internals..
+        infodict = device._device_info._asdict()
+        _LOGGER.debug("Got device info: %s from url %s", infodict, self.url)
 
-            # we need to replace USN with udn from the XML.
-            if self.udn != device.udn:
-                _LOGGER.warning("Got different UDN, replacing..")
-                self.udn = device.udn
+        # we need to replace USN with udn from the XML.
+        if self.udn != device.udn:
+            _LOGGER.warning("Got different UDN, replacing..")
+            self.udn = device.udn
 
-            self.info = {k: v for k, v in infodict.items() if k != "xml"}
-            self.info["icon"] = self.icon
+        self.info = {k: v for k, v in infodict.items() if k != "xml"}
+        self.info["icon"] = self.icon
 
-            self.icons = parse_icons(self.info["url"], device)
-
-        except TimeoutError as ex:
-            _LOGGER.error("Unable to fetch device info for %s: %s", self, ex)
+        self.icons = parse_icons(self.info["url"], device)
 
 
 class UPnPStatusTracker:
@@ -211,9 +207,13 @@ class UPnPStatusTracker:
                 expire_callback=self.handle_expired,
             )
             self.devices[udn] = dev
-            await dev.fetch_info()
-            if self.new_device_cb:
-                await self.new_device_cb(dev)
+            try:
+                await dev.fetch_info()
+                if self.new_device_cb:
+                    await self.new_device_cb(dev)
+            except (UpnpError, TimeoutError) as ex:
+                _LOGGER.error("Unable to fetch device info for %s: %s", self, ex)
+                return
 
         dev = self.devices[udn]
         dev.set_alive(True)
@@ -271,7 +271,6 @@ class UPnPStatusTracker:
         await self.listener.async_start()
 
     async def stop(self):
-        print("stopping listening")
         await self.listener.async_stop()
 
     async def print_devices(self):
