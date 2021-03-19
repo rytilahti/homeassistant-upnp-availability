@@ -2,11 +2,12 @@
   "domain": "upnp_availability",
   "name": "UPnP Availability Sensor",
   "config_flow": true,
-  "documentation": "",
+  "documentation": "https://github.com/rytilahti/homeassistant-upnp-availability/",
   "requirements": [],
   "ssdp": {},
   "homekit": {},
   "dependencies": [],
+  "version": "0.0.1",
   "codeowners": [
     "@rytilahti"
   ]
