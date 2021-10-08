@@ -25,9 +25,21 @@ The state changes as instantaneous as they are based on the notifications sent b
 1. Copy the `upnp_availability` directory to your `custom_components` directory.
 2. Restart Home Assistant.
 3. Follow the instructions above for configuration (step 3.)
- 
+
 ### How does it work?
 
 * This integration listens for multicast communication mandated by UPnP specifications ("ssdp:alive" and "ssdp:goodbye" notifications).
   * Limitation: the device has to be in the same network as your homeassistant instance.
 * After the device-given timeout (or 1800 seconds) has lapsed without an update from the device, it will be considered to be turned off.
+
+
+## Testing the discovery without homeassistant
+
+You can try the tracker without homeassistant by executing:
+```shell
+python custom_components/upnp_availability/upnpstatustracker.py
+```
+On multihomed systems, you can define `--addr` for each source IP address to use for tracking:
+```shell
+python custom_components/upnp_availability/upnpstatustracker.py --addr 192.168.1.123 --addr 192.168.100.123
+```

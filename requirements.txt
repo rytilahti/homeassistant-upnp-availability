@@ -1,1 +1,1 @@
-async_upnp_client
+async_upnp_client>=0.21

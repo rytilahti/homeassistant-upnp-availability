@@ -4,14 +4,15 @@ This platform provides a binary sensor to track the availability
 """
 import asyncio
 import logging
-from typing import Optional
 from collections import defaultdict
+from typing import Optional
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.network import async_get_enabled_source_ips
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-from .upnpstatustracker import UPnPStatusTracker, Device
 from .const import DOMAIN
+from .upnpstatustracker import Device, UPnPStatusTracker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,8 +22,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = defaultdict(lambda: False)
     upnp_data = hass.data[DOMAIN]
-
-    _LOGGER.debug("Setting up upnp_availability..")
 
     devices = upnp_data["devices"] = {}
 
@@ -42,8 +41,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor = devices[dev.udn]
         await sensor._update_status()
 
+    addresses = [str(addr) for addr in await async_get_enabled_source_ips(hass)]
+    _LOGGER.info("Initializing on addresses: %s", addresses)
     tracker = upnp_data["tracker"] = UPnPStatusTracker(
-        new_device_cb=add_new_device, state_changed_cb=update_device
+        source_addresses=addresses,
+        new_device_cb=add_new_device,
+        state_changed_cb=update_device,
     )
     await tracker.find_devices()
     await tracker.listen()
@@ -91,7 +94,7 @@ class UPNPBinarySensor(BinarySensorEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": self.dev.info["manufacturer"],
-            "model": f"{self.dev.info['model_name']} - {self.dev.info['model_description']}",
+            "model": f"{self.dev.info['model_name']} - {self.dev.info['model_description']}",  # noqa: E501
         }
 
     @property
