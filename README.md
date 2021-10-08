@@ -37,9 +37,9 @@ The state changes as instantaneous as they are based on the notifications sent b
 
 You can try the tracker without homeassistant by executing:
 ```shell
-python custom_components/upnp_availability/upnpstatustracker.py
+python cli.py
 ```
 On multihomed systems, you can define `--addr` for each source IP address to use for tracking:
 ```shell
-python custom_components/upnp_availability/upnpstatustracker.py --addr 192.168.1.123 --addr 192.168.100.123
+python cli.py --addr 192.168.1.123 --addr 192.168.100.123
 ```
