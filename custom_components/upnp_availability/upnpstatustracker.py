@@ -1,16 +1,17 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional, List
+from ipaddress import ip_address
+from typing import Dict, List, Optional
 from urllib.parse import urljoin
+from xml.etree.ElementTree import ParseError
 
 import attr
-
-from async_upnp_client import UpnpFactory, UpnpError
-from async_upnp_client.advertisement import UpnpAdvertisementListener
+import typer
+from async_upnp_client import UpnpError, UpnpFactory
+from async_upnp_client.advertisement import SsdpAdvertisementListener
 from async_upnp_client.aiohttp import AiohttpRequester
 from async_upnp_client.search import async_search
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def parse_icons(baseurl: str, dev) -> List[Icon]:
     This could be upstreamed to async_upnp_client.
     """
     icons = []
-    for icon in dev._device_info.xml.findall(".//device:icon", namespaces=NS):
+    for icon in dev.device_info.xml.findall(".//device:icon", namespaces=NS):
         width = icon.findtext(".//device:width", 0, namespaces=NS)
         height = icon.findtext(".//device:height", 0, namespaces=NS)
         depth = icon.findtext(".//device:depth", 0, namespaces=NS)
@@ -54,7 +55,11 @@ def parse_icons(baseurl: str, dev) -> List[Icon]:
         icon_url = urljoin(baseurl, url)
 
         icon = Icon(
-            mimetype=mimetype, width=width, height=height, depth=depth, url=icon_url,
+            mimetype=mimetype,
+            width=width,
+            height=height,
+            depth=depth,
+            url=icon_url,
         )
 
         icons.append(icon)
@@ -92,12 +97,14 @@ class Device:
     @property
     def icon(self) -> Optional[str]:
         """Return the url for largest icon."""
-        l = list(reversed(sorted(self.icons, key=lambda x: x.width)))
-        if not l:
+        # mypy doesn't get the type correct (error: "_T" has no attribute "width")
+        # so we ignore type checks for this and the url access below
+        icons = list(reversed(sorted(self.icons, key=lambda x: x.width)))  # type: ignore  # noqa: E501
+        if not icons:
             return None
 
-        largest_icon = l.pop()
-        return largest_icon.url
+        largest_icon = icons.pop()
+        return largest_icon.url  # type: ignore
 
     def set_alive(self, alive: bool):
         self.alive = alive
@@ -116,7 +123,7 @@ class Device:
         device = await factory.async_create_device(self.url)
         self.name = device.name
         # FIXME this depends currently on async_upnp_client internals..
-        infodict = device._device_info._asdict()
+        infodict = device.device_info._asdict()
         _LOGGER.debug("Got device info: %s from url %s", infodict, self.url)
 
         # we need to replace USN with udn from the XML.
@@ -127,24 +134,32 @@ class Device:
         self.info = {k: v for k, v in infodict.items() if k != "xml"}
         self.info["icon"] = self.icon
 
-        self.icons = parse_icons(self.info["url"], device)
+        self.icons: List[Icon] = parse_icons(self.info["url"], device)
 
 
 class UPnPStatusTracker:
     def __init__(
-        self, *, new_device_cb=None, state_changed_cb=None, max_age_override=None
+        self,
+        *,
+        new_device_cb=None,
+        state_changed_cb=None,
+        max_age_override=None,
+        source_addresses=None
     ):
         """Creates a status tracker.
 
         :param new_device_cb: coroutine to be awaited when new device is discovered.
         :param state_changed_cb: coroutine to be awaited when the device state changes.
-        :param max_age_override: if not None, will override the device given max-age for expiration.
+        :param max_age_override: if set, overrides the device's max-age for expiration.
+        :param source_addresses: IPv4 addresses to use as source addresses.
         """
-        self.listener = None
+        self.listeners: Dict[Optional[str], SsdpAdvertisementListener] = {}
+        self.source_addresses = source_addresses
         self.devices = {}  # type: Dict[str, Device]
         self.state_changed_cb = state_changed_cb
         self.new_device_cb = new_device_cb
         self.max_age_override = max_age_override
+        _LOGGER.debug("Initializing with source addresses: %s", source_addresses)
 
     @staticmethod
     def _get_max_age(headers):
@@ -178,7 +193,13 @@ class UPnPStatusTracker:
         _LOGGER.debug("Going to request upnp:rootdevices in the network..")
         if async_callback is None:
             async_callback = self.handle_alive
-        await async_search(service_type=ROOT_DEVICE, async_callback=async_callback)
+
+        for source_address in self.source_addresses:
+            await async_search(
+                service_type=ROOT_DEVICE,
+                source_ip=ip_address(source_address),
+                async_callback=async_callback,
+            )
 
     async def handle_alive(self, headers):
         """Handle alive messages from async_upnp_client.
@@ -211,7 +232,8 @@ class UPnPStatusTracker:
                 await dev.fetch_info()
                 if self.new_device_cb:
                     await self.new_device_cb(dev)
-            except (UpnpError, TimeoutError) as ex:
+            # TODO: should fetching be re-tried?
+            except (UpnpError, TimeoutError, ParseError) as ex:
                 _LOGGER.error("Unable to fetch device info for %s: %s", self, ex)
                 return
 
@@ -259,19 +281,21 @@ class UPnPStatusTracker:
             await self.state_changed_cb(dev)
 
     async def listen(self):
-        if self.listener is not None:
+        if self.listeners:
             _LOGGER.error("Listen has already been called, ignoring.")
             return
 
-        self.listener = UpnpAdvertisementListener(
-            on_alive=self.handle_alive,
-            on_byebye=self.handle_bye,
-            on_update=self.handle_update,
-        )
-        await self.listener.async_start()
+        for srcip in self.source_addresses:
+            self.listeners[srcip] = listener = SsdpAdvertisementListener(
+                on_alive=self.handle_alive,
+                on_byebye=self.handle_bye,
+                on_update=self.handle_update,
+            )
+            await listener.async_start()
 
     async def stop(self):
-        await self.listener.async_stop()
+        for listener in self.listeners.values():
+            await listener.async_stop()
 
     async def print_devices(self):
         print("== Currently active devices ==")
@@ -282,13 +306,22 @@ class UPnPStatusTracker:
             )
 
 
-def main():
+def main(
+    addr: List[str] = typer.Option(help="List of addresses", default=None),
+    debug: bool = typer.Option(help="Enable debug", default=False),
+):
     loop = asyncio.get_event_loop()
+
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    logging.getLogger("async_upnp_client").setLevel(level=logging.INFO)
+    logging.getLogger("async_upnp_client.traffic").setLevel(level=logging.INFO)
 
     async def state_changed(dev):
         print("state changed: %s" % dev)
 
-    tracker = UPnPStatusTracker(state_changed_cb=state_changed)
+    tracker = UPnPStatusTracker(source_addresses=addr, state_changed_cb=state_changed)
     loop.run_until_complete(tracker.find_devices())
     asyncio.ensure_future(tracker.listen())
 
@@ -300,12 +333,14 @@ def main():
     asyncio.ensure_future(print_state())
     try:
         loop.run_forever()
-    except:
+    except:  # noqa: E722
         loop.run_until_complete(tracker.stop())
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger("async_upnp_client").setLevel(level=logging.INFO)
-    logging.getLogger("async_upnp_client.traffic").setLevel(level=logging.INFO)
-    main()
+    try:
+        import typer
+
+        typer.run(main)
+    except:  # noqa: E722
+        print("You need to install typer to use the cli tool: pip install typer")
