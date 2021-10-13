@@ -194,11 +194,16 @@ class UPnPStatusTracker:
             async_callback = self.handle_alive
 
         for source_address in self.source_addresses:
-            await async_search(
-                service_type=ROOT_DEVICE,
-                source_ip=ip_address(source_address),
-                async_callback=async_callback,
-            )
+            try:
+                await async_search(
+                    service_type=ROOT_DEVICE,
+                    source_ip=ip_address(source_address),
+                    async_callback=async_callback,
+                )
+            except OSError as ex:
+                _LOGGER.warning(
+                    "Unable to search using addr %s: %s", source_address, ex
+                )
 
     async def handle_alive(self, headers):
         """Handle alive messages from async_upnp_client.
