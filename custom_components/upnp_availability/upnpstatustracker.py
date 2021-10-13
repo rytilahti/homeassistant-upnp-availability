@@ -238,7 +238,7 @@ class UPnPStatusTracker:
                     await self.new_device_cb(dev)
             # TODO: should fetching be re-tried?
             except (UpnpError, TimeoutError, ParseError) as ex:
-                _LOGGER.error("Unable to fetch device info for %s: %s", self, ex)
+                _LOGGER.error("Unable to fetch device info for %s: %s", dev, ex)
                 return
 
         dev = self.devices[udn]
