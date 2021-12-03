@@ -74,7 +74,7 @@ class UPNPBinarySensor(BinarySensorEntity):
             "Initialized %s with unique_id: %s (attrs: %s)",
             self.name,
             self.unique_id,
-            self.device_state_attributes,
+            self.extra_state_attributes,
         )
 
     async def _update_status(self):
@@ -113,6 +113,6 @@ class UPNPBinarySensor(BinarySensorEntity):
         return self.dev.alive
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Provide attributes for display on device card."""
         return self.dev.info
