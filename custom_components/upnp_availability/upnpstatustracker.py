@@ -1,13 +1,14 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from ipaddress import ip_address
+from ipaddress import ip_address, IPv4Address, IPv6Address
 from typing import Dict, List, Optional
 from urllib.parse import urljoin
 from xml.etree.ElementTree import ParseError
 
 import attr
-from async_upnp_client import UpnpError, UpnpFactory
+from async_upnp_client.exceptions import UpnpError
+from async_upnp_client.exceptions import UpnpFactory
 from async_upnp_client.advertisement import SsdpAdvertisementListener
 from async_upnp_client.aiohttp import AiohttpRequester
 from async_upnp_client.search import async_search
@@ -194,16 +195,26 @@ class UPnPStatusTracker:
             async_callback = self.handle_alive
 
         for source_address in self.source_addresses:
+            _LOGGER.debug("Starting device search using addr %s", source_address)
             try:
-                await async_search(
-                    service_type=ROOT_DEVICE,
-                    source_ip=ip_address(source_address),
-                    async_callback=async_callback,
-                )
-            except OSError as ex:
-                _LOGGER.warning(
-                    "Unable to search using addr %s: %s", source_address, ex
-                )
+                if type(ip_address(source_address)) is IPv6Address:
+                    source_ipv6 = source_address.split("%")
+                    source_address = (source_ipv6[0],0,0,source_ipv6[1])
+                    return source_address
+                elif type(ip_address(source_address)) is IPv4Address:
+                    source_address=(source_address,0)
+                try:
+                    await async_search(
+                        service_type=ROOT_DEVICE,
+                        source=source_address,
+                        async_callback=async_callback,
+                    )
+                except OSError as ex:
+                    _LOGGER.warning(
+                        "Unable to search using addr %s: %s", source_address, ex
+                    )
+            except ValueError:
+                    _LOGGER.warning("Source address is not a valid IP address")
 
     async def handle_alive(self, headers):
         """Handle alive messages from async_upnp_client.
