@@ -8,7 +8,7 @@ from xml.etree.ElementTree import ParseError
 
 import attr
 from async_upnp_client.exceptions import UpnpError
-from async_upnp_client.exceptions import UpnpFactory
+from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.advertisement import SsdpAdvertisementListener
 from async_upnp_client.aiohttp import AiohttpRequester
 from async_upnp_client.search import async_search
