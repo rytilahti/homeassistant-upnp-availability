@@ -197,24 +197,30 @@ class UPnPStatusTracker:
         for source_address in self.source_addresses:
             _LOGGER.debug("Starting device search using addr %s", source_address)
             try:
-                if type(ip_address(source_address)) is IPv6Address:
-                    source_ipv6 = source_address.split("%")
-                    source_address = (source_ipv6[0],0,0,source_ipv6[1])
-                    return source_address
-                elif type(ip_address(source_address)) is IPv4Address:
-                    source_address=(source_address,0)
-                try:
-                    await async_search(
-                        service_type=ROOT_DEVICE,
-                        source=source_address,
-                        async_callback=async_callback,
-                    )
-                except OSError as ex:
-                    _LOGGER.warning(
-                        "Unable to search using addr %s: %s", source_address, ex
-                    )
+                addr = ip_address(source_address)
             except ValueError:
                     _LOGGER.warning("Source address is not a valid IP address")
+                    continue
+
+            if addr.version == 6:
+                    split_addr = source_address.split("%")
+                    source_address = (split_addr[0],0,0,split_addr[1])
+            else:
+                    source_address=(addr,0)
+            
+            self._search(source_address,async_callback)
+
+    async def _search(self,addr,async_callback):
+        try:
+            await async_search(
+                service_type=ROOT_DEVICE,
+                source=addr,
+                async_callback=async_callback,
+                )
+        except OSError as ex:
+            _LOGGER.warning(
+                "Unable to search using addr %s: %s", addr, ex
+            )
 
     async def handle_alive(self, headers):
         """Handle alive messages from async_upnp_client.
