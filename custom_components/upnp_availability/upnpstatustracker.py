@@ -1,16 +1,16 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from ipaddress import ip_address, IPv4Address, IPv6Address
+from ipaddress import ip_address
 from typing import Dict, List, Optional
 from urllib.parse import urljoin
 from xml.etree.ElementTree import ParseError
 
 import attr
-from async_upnp_client.exceptions import UpnpError
-from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.advertisement import SsdpAdvertisementListener
 from async_upnp_client.aiohttp import AiohttpRequester
+from async_upnp_client.client_factory import UpnpFactory
+from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.search import async_search
 
 _LOGGER = logging.getLogger(__name__)
@@ -199,28 +199,26 @@ class UPnPStatusTracker:
             try:
                 addr = ip_address(source_address)
             except ValueError:
-                    _LOGGER.warning("Source address is not a valid IP address")
-                    continue
+                _LOGGER.warning("Source address is not a valid IP address")
+                continue
 
             if addr.version == 6:
-                    split_addr = source_address.split("%")
-                    source_address = (split_addr[0],0,0,split_addr[1])
+                split_addr = source_address.split("%")
+                source_address = (split_addr[0], 0, 0, split_addr[1])
             else:
-                    source_address=(addr,0)
-            
-            self._search(source_address,async_callback)
+                source_address = (addr, 0)
 
-    async def _search(self,addr,async_callback):
+            await self._search(source_address, async_callback)
+
+    async def _search(self, addr, async_callback):
         try:
             await async_search(
                 service_type=ROOT_DEVICE,
                 source=addr,
                 async_callback=async_callback,
-                )
-        except OSError as ex:
-            _LOGGER.warning(
-                "Unable to search using addr %s: %s", addr, ex
             )
+        except OSError as ex:
+            _LOGGER.warning("Unable to search using addr %s: %s", addr, ex)
 
     async def handle_alive(self, headers):
         """Handle alive messages from async_upnp_client.
