@@ -204,7 +204,7 @@ class UPnPStatusTracker:
 
             if addr.version == 6:
                 split_addr = source_address.split("%")
-                source_address = (split_addr[0], 0, 0, split_addr[1])
+                source_address = (split_addr[0], 0, 0, int(split_addr[1]))
             else:
                 source_address = (addr, 0)
 
