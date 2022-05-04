@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.helpers import config_entry_flow
-from .const import DOMAIN
 
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +14,5 @@ async def _async_has_devices(hass) -> bool:
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN,
-    "UPnP Availability",
-    _async_has_devices
+    DOMAIN, "UPnP Availability", _async_has_devices
 )

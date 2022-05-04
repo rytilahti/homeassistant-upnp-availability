@@ -3,7 +3,9 @@
   "name": "UPnP Availability Sensor",
   "config_flow": true,
   "documentation": "https://github.com/rytilahti/homeassistant-upnp-availability/",
-  "requirements": ["async_upnp_client>=0.21"],
+  "requirements": [
+    "async_upnp_client>=0.27"
+  ],
   "ssdp": {},
   "homekit": {},
   "dependencies": [],
