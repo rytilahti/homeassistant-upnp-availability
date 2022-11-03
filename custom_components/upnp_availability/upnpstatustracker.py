@@ -213,7 +213,7 @@ class UPnPStatusTracker:
     async def _search(self, addr, async_callback):
         try:
             await async_search(
-                service_type=ROOT_DEVICE,
+                search_target=ROOT_DEVICE,
                 source=addr,
                 async_callback=async_callback,
             )
