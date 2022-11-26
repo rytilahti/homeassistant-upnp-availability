@@ -3,6 +3,7 @@
   "name": "UPnP Availability Sensor",
   "config_flow": true,
   "documentation": "https://github.com/rytilahti/homeassistant-upnp-availability/",
+  "issue_tracker": "https://github.com/rytilahti/homeassistant-upnp-availability/issues",
   "requirements": [
     "async_upnp_client>=0.32"
   ],
