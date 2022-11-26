@@ -217,7 +217,7 @@ class UPnPStatusTracker:
                 source=addr,
                 async_callback=async_callback,
             )
-        except OSError as ex:
+        except (OSError, UpnpError) as ex:
             _LOGGER.warning("Unable to search using addr %s: %s", addr, ex)
 
     async def handle_alive(self, headers):
