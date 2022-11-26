@@ -4,8 +4,7 @@ from typing import List
 
 import typer
 
-from custom_components.upnp_availability.upnpstatustracker import \
-    UPnPStatusTracker
+from custom_components.upnp_availability.upnpstatustracker import UPnPStatusTracker
 
 
 def main(
