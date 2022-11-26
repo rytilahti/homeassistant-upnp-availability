@@ -1,0 +1,19 @@
+name: Check for HACS acceptance
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  hacs:
+    name: Run hassfest and hacs action
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v2"
+      - uses: "home-assistant/actions/hassfest@master"
+      - name: HACS Action
+        uses: "hacs/action@main"
+        with:
+          category: "integration"
+          ignore: brands
