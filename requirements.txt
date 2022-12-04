@@ -1,2 +1,2 @@
-async_upnp_client>=0.21
+async_upnp_client>=0.32
 attrs
