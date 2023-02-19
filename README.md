@@ -1,6 +1,6 @@
 # UPnP Availability sensor for Home Assistant
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![hacs_badge](https://img.shields.io/badge/hacs-default-orange.svg)](https://github.com/custom-components/hacs)
 
 This custom integration allows you to track the state (on/off) of your UPnP-compatible devices, even when Home Assistant does not have support for controlling them.
 
@@ -15,16 +15,16 @@ The state changes as instantaneous as they are based on the notifications sent b
 
 ## HACS installation
 
-1. Go to Community -> Settings in Home Assistant
-2. Add a new custom repository of type 'integration' and proceed to install it.
-3. Go to Configuration -> Integrations -> Set up a new integration and search for "UPnP Availability".
-3. That's it! Entities will be immediately created for the already available devices. As soon as you add (or turn on) new UPnP-supporting devices, new entities are generated to track their state.
+1. Search for upnp in the HACS and download it.
+2. Go to Settings -> Devices & Services (or click [![Open your Home Assistant instance and show your devices.](https://my.home-assistant.io/badges/integrations.svg)](https://my.home-assistant.io/redirect/integrations/)) and select "Add integration".
+3. Search for "UPnP Availability Sensor" and configure it.
+4. That's it! Entities will be immediately created for the already available devices. As soon as you add (or turn on) new UPnP-supporting devices, new entities are generated to track their state.
 
 ## Manual Installation
 
 1. Copy the `upnp_availability` directory to your `custom_components` directory.
 2. Restart Home Assistant.
-3. Follow the instructions above for configuration (step 3.)
+3. Follow the instructions above for configuration (step 2.)
 
 ### How does it work?
 
