@@ -77,8 +77,8 @@ class Device:
 
     max_age = attr.ib(default=1800)
 
-    info = attr.ib(factory=dict)
-    icons = attr.ib(factory=list, repr=False)
+    info: Dict[str, str] = attr.ib(factory=dict)
+    icons: List[Icon] = attr.ib(factory=list, repr=False)
 
     expire_timer = attr.ib(default=None, repr=False)
     expire_callback = attr.ib(default=None, repr=False)
@@ -144,7 +144,7 @@ class UPnPStatusTracker:
         new_device_cb=None,
         state_changed_cb=None,
         max_age_override=None,
-        source_addresses=None
+        source_addresses=None,
     ):
         """Creates a status tracker.
 
