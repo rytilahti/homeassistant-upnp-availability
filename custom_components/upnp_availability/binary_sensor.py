@@ -48,7 +48,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         new_device_cb=add_new_device,
         state_changed_cb=update_device,
     )
-    await tracker.find_devices()
+    hass.async_create_background_task(
+        tracker.find_devices(), "upnp-availability initial discovery"
+    )
     await tracker.listen()
 
     async def stop_tracker(event):
