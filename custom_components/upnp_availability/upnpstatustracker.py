@@ -288,7 +288,7 @@ class UPnPStatusTracker:
 
         udn = headers["_udn"]
         if udn not in self.devices:
-            _LOGGER.error("Got bye from unknown device: %s", udn)
+            _LOGGER.debug("Got bye from unknown device, ignoring: %s", udn)
             return
 
         dev = self.devices[udn]
