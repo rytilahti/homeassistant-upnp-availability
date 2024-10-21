@@ -2,6 +2,7 @@
 This platform provides a binary sensor to track the availability
  of UPnP devices, based on ssdp:alive and ssdp:byebye notifications.
 """
+
 import asyncio
 import logging
 from collections import defaultdict
