@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import List
 
 import typer
 
@@ -8,7 +7,7 @@ from custom_components.upnp_availability.upnpstatustracker import UPnPStatusTrac
 
 
 def main(
-    addr: List[str] = typer.Option(help="List of addresses", default=None),
+    addr: list[str] = typer.Option(help="List of addresses", default=None),
     debug: bool = typer.Option(help="Enable debug", default=False),
 ):
     loop = asyncio.get_event_loop()
