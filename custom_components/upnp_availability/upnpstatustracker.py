@@ -2,7 +2,6 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from ipaddress import ip_address
-from typing import Dict, List, Optional
 from urllib.parse import urljoin
 from xml.etree.ElementTree import ParseError
 
@@ -36,7 +35,7 @@ class Icon:
     url = attr.ib()
 
 
-def parse_icons(baseurl: str, dev) -> List[Icon]:
+def parse_icons(baseurl: str, dev) -> list[Icon]:
     """Parse and return a list of icons for the given device.
 
     Currently unused by the homeassistant integration as I have no
@@ -77,8 +76,8 @@ class Device:
 
     max_age = attr.ib(default=1800)
 
-    info: Dict[str, str] = attr.ib(factory=dict)
-    icons: List[Icon] = attr.ib(factory=list, repr=False)
+    info: dict[str, str] = attr.ib(factory=dict)
+    icons: list[Icon] = attr.ib(factory=list, repr=False)
 
     expire_timer = attr.ib(default=None, repr=False)
     expire_callback = attr.ib(default=None, repr=False)
@@ -95,11 +94,11 @@ class Device:
             )
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the url for largest icon."""
         # mypy doesn't get the type correct (error: "_T" has no attribute "width")
         # so we ignore type checks for this and the url access below
-        icons = list(reversed(sorted(self.icons, key=lambda x: x.width)))  # type: ignore  # noqa: E501
+        icons = list(reversed(sorted(self.icons, key=lambda x: x.width)))  # type: ignore
         if not icons:
             return None
 
@@ -134,7 +133,7 @@ class Device:
         self.info = {k: v for k, v in infodict.items() if k != "xml"}
         self.info["icon"] = self.icon
 
-        self.icons: List[Icon] = parse_icons(self.info["url"], device)
+        self.icons: list[Icon] = parse_icons(self.info["url"], device)
 
 
 class UPnPStatusTracker:
@@ -153,7 +152,7 @@ class UPnPStatusTracker:
         :param max_age_override: if set, overrides the device's max-age for expiration.
         :param source_addresses: IPv4 addresses to use as source addresses.
         """
-        self.listeners: Dict[Optional[str], SsdpAdvertisementListener] = {}
+        self.listeners: dict[str | None, SsdpAdvertisementListener] = {}
         self.source_addresses = source_addresses
         self.devices = {}  # type: Dict[str, Device]
         self.state_changed_cb = state_changed_cb
