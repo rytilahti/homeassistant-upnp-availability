@@ -1,4 +1,5 @@
 """The UPnP Availability integration."""
+
 import logging
 
 import voluptuous as vol
