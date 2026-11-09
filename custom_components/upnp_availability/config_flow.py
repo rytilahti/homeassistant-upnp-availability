@@ -1,4 +1,5 @@
 """Config flow for UPnP Availability."""
+
 import logging
 
 from homeassistant.helpers import config_entry_flow
