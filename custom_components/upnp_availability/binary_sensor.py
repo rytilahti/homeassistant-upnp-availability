@@ -2,10 +2,10 @@
 This platform provides a binary sensor to track the availability
  of UPnP devices, based on ssdp:alive and ssdp:byebye notifications.
 """
+
 import asyncio
 import logging
 from collections import defaultdict
-from typing import Optional
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.network import async_get_enabled_source_ips
@@ -85,7 +85,7 @@ class UPNPBinarySensor(BinarySensorEntity):
         self.async_schedule_update_ha_state()
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return UDN as unique id."""
         return self.dev.udn
 
@@ -96,7 +96,7 @@ class UPNPBinarySensor(BinarySensorEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": self.dev.info["manufacturer"],
-            "model": f"{self.dev.info['model_name']} - {self.dev.info['model_description']}",  # noqa: E501
+            "model": f"{self.dev.info['model_name']} - {self.dev.info['model_description']}",
         }
 
     @property
